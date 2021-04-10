@@ -83,8 +83,7 @@ In the meanwhile there is a second generation available.
 https://www.hella.com/caravan/en/Intelligent-battery-sensor-1564.html
 
 ## Pinning of connector
-Pin 1 = 12V (TBC)
-Pin 2 = Lin (TBC)
+Pin 1 = 12V, Pin 2 = Lin
 
 ## Connector Housing (2 pin MCON-1.2 LL type)
 Connector is has coding A
