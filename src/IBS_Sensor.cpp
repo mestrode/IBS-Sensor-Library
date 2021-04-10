@@ -106,7 +106,7 @@ bool IBS_Sensor::readFrameStatus()
     {
         StatusByte = LinBus->LinMessage[0];
         // Bit 0 seemed to be a kind of Data Ready Flag
-        StatusReady = LinBus->LinMessage[0] & 0x01;
+        StatusReady = ~(LinBus->LinMessage[0] & 0x01);
     }
     return chkSumValid;
 }
