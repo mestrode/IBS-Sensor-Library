@@ -66,8 +66,8 @@ bool IBS_Sensor::readFrames()
     //ensure not work with received data (in case of a chksum error at the first run)
     StatusReady = false;
 
-    //Read max 3 times sensor status / wait for valid data
-    for (int i=3; i>=0; i--) {
+    //Read max 10 times sensor status / wait for valid data
+    for (int i=10; i>=0; i--) {
         // StatusReady Flag is included in Frame "Status"
         readFrameStatus();
         if (StatusReady)
@@ -82,7 +82,7 @@ bool IBS_Sensor::readFrames()
     success = success && readFrameSOx();
     success = success && readFrameCapacity();
 
-//  Dont know that to do with the results of Frame Error and TB3
+//  Don't know that to do with the results of Frame Error and TB3
 //    success = success && readFrameError();
 //    success = success && readFrameTB3();
 
