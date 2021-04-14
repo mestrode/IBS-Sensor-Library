@@ -14,7 +14,6 @@
 
 #pragma once
 
-//#include <Arduino.h>
 //This class needs a lin interface to read and write on
 #include <Lin_Interface.hpp>
 
