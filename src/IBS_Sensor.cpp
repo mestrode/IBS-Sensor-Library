@@ -231,9 +231,29 @@ bool IBS_Sensor::readFrameCapacity()
 /// Configure BatSensor by sending 3 Configuration-Frames
 void IBS_Sensor::writeConfiguration(IBS_BatteryTypes BatType, uint8_t BatCapacity)
 {
+    // snapshot
+    readFrameCapacity();
+    Serial.print("Old capacity: ");
+    Serial.print(Cap_Configured);
+    Serial.print("Ah, Calibration Flag: ");
+    Serial.print(CalibrationDone ? "true" : "false");
+    Serial.println();
+
+    // configure
+    Serial.print(" (1/3) Write unknown Param...");
     writeUnknownParam();              // Not sure why
+    Serial.print(" (2/3) Write capacity...\n");
     writeBatCapacity(BatCapacity);    // nominal capacity (Ah)
+    Serial.print(" (3/3) Write battery type...\n");
     writeBatType(BatType);            // battery type (AGM, GEL or STARTER)
+
+    // verify
+    readFrameCapacity();
+    Serial.print("New capacity: ");
+    Serial.print(Cap_Configured);
+    Serial.print("Ah, Calibration Flag: ");
+    Serial.print(CalibrationDone ? "true" : "false");
+    Serial.println();
 }
 
 /// Write configuration Parameter "Unknown"
