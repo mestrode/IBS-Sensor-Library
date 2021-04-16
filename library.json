@@ -24,8 +24,8 @@
   "license": "GPL-2.0-only",
   "dependencies": [
     {
-      "name": "LIN-Interface",
-      "version": "https://github.com/mestrode/LIN-Interface-Library.git"
+      "name": "Lin-Interface",
+      "version": "https://github.com/mestrode/Lin-Interface-Library"
     }
   ]
 }
