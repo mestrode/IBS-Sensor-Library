@@ -1,5 +1,5 @@
 # IBS-Sensor-Library
-Hella IBS 200X Lead-Battery Sensor (Gen 1) via LIN-Bus
+Hella IBS 200 X Lead-Battery Sensor (Gen 1) via LIN-Bus
 
 A IBS 200X sensors overserves the charge and health state of a Lead-Battery. Data can be read out via Lin interface, and this can easily be done with this library.
 
@@ -94,7 +94,7 @@ If available, try the mirrored version, if not available, try a cutter.
 ## Single crimp pin
 7-1452671-1 (Tyco, MCON-1.2 LL, single wire seal)
 
-### Single wire seal
+## Single wire seal
 2098582-1 (Tyco, will be ok for small wires)
 
 # safety
