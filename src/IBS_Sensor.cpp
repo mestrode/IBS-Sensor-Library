@@ -277,7 +277,6 @@ void IBS_Sensor::writeUnknownParam()
 //                               ^^ guess this was not successful
 
     LinBus->LinMessage[0] = 0x01 + _SensorNo;  // Sensor No
-    LinBus->LinMessage[0] = 0x02;              // Sensor No
     LinBus->LinMessage[1] = 0x06;              // Data Len
     LinBus->LinMessage[2] = 0xB2;              // CMD Config Read
     LinBus->LinMessage[3] = 0x3A;              // Config Type
