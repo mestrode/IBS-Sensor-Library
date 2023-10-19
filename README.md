@@ -9,7 +9,6 @@ You can provide a LIN-Interface object to the IBS Sensor object, which is used t
 The LIN Interface utilizes the Hardware Serial (UART) of an ESP32. To ensure code reusability, I have provided a separate library, which can be found here: [Lin Interface Library](https://github.com/mestrode/Lin-Interface-Library).
 
 On the hardware side, I have used a TJA1020 Transceiver. This chip contains a state machine that needs to be controlled before you can read or write data. To simplify this process, I have created a derived class that considers the state machine every time the bus is used. You can find this class in the [Lin Transceiver Library](https://github.com/mestrode/Lin-Transceiver-Library).
----
 
 # Example
 This small example utilizes hardware serial (UART) number 2 of an ESP32.
