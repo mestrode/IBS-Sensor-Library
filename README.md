@@ -78,11 +78,11 @@ This will write three configuration Frames. The function for two of them is know
 
 # hardware
 ## Productside of manufacturer
-https://www.hella.com/microsite-electronics/en/Intelligent-battery-sensors-154.html
-https://www.hella.com/microsite-electronics/en/Intelligent-battery-sensor-200X-491.html
+- https://www.hella.com/microsite-electronics/en/Intelligent-battery-sensors-154.html
+- https://www.hella.com/microsite-electronics/en/Intelligent-battery-sensor-200X-491.html
 
 In the meanwhile there is a second generation available. 
-https://www.hella.com/caravan/en/Intelligent-battery-sensor-1564.html
+- https://www.hella.com/caravan/en/Intelligent-battery-sensor-1564.html
 
 ## Pinning of connector
 - Pin 1 = 12V
