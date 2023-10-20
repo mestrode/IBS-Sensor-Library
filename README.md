@@ -78,6 +78,8 @@ This will write three configuration Frames. The function for two of them is know
 
 # hardware
 ## Productside of manufacturer
+- https://www.hella.com/bus/en/Intelligent-battery-sensor-IBS-1555.html
+Outdated links (Webarchive?)
 - https://www.hella.com/microsite-electronics/en/Intelligent-battery-sensors-154.html
 - https://www.hella.com/microsite-electronics/en/Intelligent-battery-sensor-200X-491.html
 
