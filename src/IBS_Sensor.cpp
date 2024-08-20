@@ -127,7 +127,8 @@ bool IBS_Sensor::readFrameCurrent()
     bool chkSumValid = LinBus->readFrame(IBS_FrameID[_SensorNo][IBS_FRM_CUR]);
     if (chkSumValid)
     {
-        Ibat = (float((long(LinBus->LinMessage[2]) << 16) + (long(LinBus->LinMessage[1]) << 8) + long(LinBus->LinMessage[0]) - 2000000L)) / 1000.0;
+        Ibat = (float((long(LinBus->LinMessage[2]) << 16) + (long(LinBus->LinMessage[1]) << 8)
+             + long(LinBus->LinMessage[0]) - 2000000L)) / 1000.0;
         Ubat = (float((LinBus->LinMessage[4] << 8) + LinBus->LinMessage[3])) / 1000.0;
         Tbat = float(LinBus->LinMessage[5]) / 2 - 40;
         unknown1 = LinBus->LinMessage[6];
