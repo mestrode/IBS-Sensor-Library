@@ -181,8 +181,8 @@ bool IBS_Sensor::readFrameSOx()
 //         "Sensor 2" = 2Bh
 
 // ID 2Bh - SOx - 2D:C8:FF:BB:00:00
-//                HH                = State Of Charge x/2 in Prozent
-//                   CC             = State Of Health x/2 in Prozent
+//                CC                = State Of Charge x/2 in Prozent
+//                   HH             = State Of Health x/2 in Prozent
 //                      ??          = unknown4 / has correlation to Cap_Available or SOC?
 //                         ??       = unknown5 / no direkt link to unkown 4?
 //                            H?:L? = unknown6 / maybe some corelation to Cap_Available or SOC?
@@ -270,20 +270,22 @@ void IBS_Sensor::writeUnknownParam()
 // - configure initial battery status? (0x7F = 50% charge state)
 
 // Request for configuration by main panel
-//  00005.731  3c 02 06 b2 3a ff 7f ff ff 8b ERR
-//                               ^^
-// Response of sensor
-//  00005.780  7d 02 02 f2 0a ff ff ff ff fe ERR
-//                               ^^ guess this was not successful
+//  00005.731  3c  02   06  b2  3a  ff 7f ff ff  8b
+//             PID Node LEN Cmd Typ  3  4  5  6  CHK
 
-    LinBus->LinMessage[0] = 0x01 + _SensorNo;  // Sensor No
-    LinBus->LinMessage[1] = 0x06;              // Data Len
-    LinBus->LinMessage[2] = 0xB2;              // CMD Config Read
-    LinBus->LinMessage[3] = 0x3A;              // Config Type
-    LinBus->LinMessage[4] = 0xFF;              // the unknown message = reset configuration?
-    LinBus->LinMessage[5] = 0x7F;              // obviously not the first but the second byte will be written
-    LinBus->LinMessage[6] = 0xFF;
-    LinBus->LinMessage[7] = 0xFF;
+// Response of sensor
+//  00005.780  7d  02   02  f2 0a ff ff ff ff  fe
+//             PID Node LEN  1  2 ff ff ff ff  CHK
+//                          ^^ ^^ = Data, but what does it mean?
+
+    LinBus->LinMessage[0] = 0x01 + _SensorNo;  // Node = Sensor No
+    LinBus->LinMessage[1] = 0x06;              // LEN =  6 bytes
+    LinBus->LinMessage[2] = 0xB2;              // Service Identifier = "Read by Identifier"
+    LinBus->LinMessage[3] = 0x3A;              // Data 1 = Config Type
+    LinBus->LinMessage[4] = 0xFF;              // Data 2 = the unknown message = reset configuration?
+    LinBus->LinMessage[5] = 0x7F;              // Data 3 = obviously not the first but the second byte will be written
+    LinBus->LinMessage[6] = 0xFF;              // Data 4
+    LinBus->LinMessage[7] = 0xFF;              // CHK (?)
 
     LinBus->writeFrame(0x3C, 8);
     LinBus->readFrame(0x3D);
@@ -296,14 +298,15 @@ void IBS_Sensor::writeBatCapacity(uint8_t BatCapacity)
 {
 // Configuration (Of Sensor Type 1)
 // Battery capacity can be read back on 0x2C Byte 4
-// ID 3Ch - Capacity       02:03:B5:39: BatCap :FF:FF:FF - BatCap in Ah
+// ID 3Ch - Capacity       02  03  B5:39: BatCap :FF:FF:FF - BatCap in Ah
+//                         Sen Len Cmd
 
     LinBus->LinMessage[0] = 0x01 + _SensorNo;  // Sensor No
     LinBus->LinMessage[1] = 0x03;              // Data Len
     LinBus->LinMessage[2] = 0xB5;              // CMD Config Read
     LinBus->LinMessage[3] = 0x39;              // Config Type
     LinBus->LinMessage[4] = BatCapacity;       // e.g. 70 Ah
-    LinBus->LinMessage[5] = 0xFF;              // filling bytes
+    LinBus->LinMessage[5] = 0xFF;              // stuffing bytes
     LinBus->LinMessage[6] = 0xFF;
     LinBus->LinMessage[7] = 0xFF;
 
