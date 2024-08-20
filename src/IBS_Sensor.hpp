@@ -88,12 +88,12 @@ public:
     void writeConfiguration(IBS_BatteryTypes BatType, uint8_t BatCapacity);
 
     // all known configuraton Frames, used by original Panel
-    void writeUnknownParam();
+    void readUnknownParam();
     void writeBatCapacity(uint8_t BatCapacity);
     void writeBatType(IBS_BatteryTypes BatType);
 
 private:
     // SensorNo = 0   --> Hella IBS 200 labeled "Sensor 1"
     // SensorNo = 1   --> Hella IBS 200 labeled "Sensor 2"
-    int _SensorNo;
+    int _NodeId;
 };
