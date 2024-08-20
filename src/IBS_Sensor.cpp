@@ -240,7 +240,7 @@ void IBS_Sensor::writeConfiguration(IBS_BatteryTypes BatType, uint8_t BatCapacit
     Serial.println();
 
     // configure
-    Serial.print(" (1/3) Write unknown Param...");
+    Serial.print(" (1/3) Write unknown Param...\n");
     writeUnknownParam();              // Not sure why
     Serial.print(" (2/3) Write capacity...\n");
     writeBatCapacity(BatCapacity);    // nominal capacity (Ah)
