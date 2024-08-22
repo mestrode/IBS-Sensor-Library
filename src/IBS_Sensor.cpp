@@ -15,14 +15,6 @@
 #include "IBS_Sensor.hpp"
 
 //-----------------------------------------------------------------------------
-// LIN Specification said abaout FrameIDs:
-//    0-50 (0x00-0x3B) are used for normal Signal/data carrying frames.
-//    60 (0x3C) and 61 (0x3D) are used to carry diagnostic and configuration data.
-//    62 (0x3E) and 63 (0x3F) are reserved for future protocol enhancements.
-constexpr auto FRAME_ID_MASTER_REQUEST = 0x3C;
-constexpr auto FRAME_ID_SLAVE_REQUEST = 0x3D;
-
-//-----------------------------------------------------------------------------
 // Frame IDs depends on SensorNo ("Sensor 1" or "Sensor 2" is marked on the label)
 
 constexpr auto IBS_FRM_STA = 0; /* 0x27 */
@@ -40,15 +32,18 @@ const uint8_t IBS_FrameID[2][6] = {{0x21, 0x22, 0x23, 0x24, 0x25, 0x26},  // "Se
 
 // Standard Diagnostic Service based on DTL Diagnostic Transport Layer
 // Source: https://lipowsky.com/downloads/Software/LIN-Basics_for_Beginners-EN.pdf
+// Slide-82
 // List of SID
+// 0x00 - 0xAF // Reserved
 constexpr auto SID_ASSIGN_NAD = 0xB0; // Optional
-constexpr auto SID_ASSIGN_FRAME_ID = 0xB1; // obsolete
+constexpr auto SID_ASSIGN_FRAME_ID = 0xB1; // Obsolete
 constexpr auto SID_READ_BY_ID = 0xB2; // Mandantory
-constexpr auto SID_CONDITIONAL_CHNAGE = 0xB3; // Optional
+constexpr auto SID_CONDITIONAL_CHANGE = 0xB3; // Optional
 constexpr auto SID_DATA_DUMP = 0xB4; // Optional
-constexpr auto SID_RESERVED = 0xB5; // Reserved
+constexpr auto SID_RESERVED = 0xB5; // Reserved - (BUT USED ON IBS)
 constexpr auto SID_SAVE_CONFIG = 0xB6; // Optional
 constexpr auto SID_ASSIGN_FRAME_IDENTIFIER_RANGE = 0xB7; // Mandatory
+// 0xB8 - 0xFF // Reserved
 
 //-----------------------------------------------------------------------------
 // There are additional Frames, the Sensor is responding to
@@ -201,7 +196,7 @@ bool IBS_Sensor::readFrameSOx()
 //                   SoH            = State Of Health x/2 in Prozent
 //                      ??          = unknown4 / has correlation to Cap_Available or SOC?
 //                         ??       = unknown5 / no direkt link to unkown4?
-//                            L?:H? = unknown6 / maybe some corelation to Cap_Available or SOC?
+//                            H?:L? = unknown6 / maybe some corelation to Cap_Available or SOC?
 // Mayby SOF (State of Function) is included
 
     bool chkSumValid = LinBus->readFrame(IBS_FrameID[_NodeId][IBS_FRM_SOx]);
@@ -224,9 +219,9 @@ bool IBS_Sensor::readFrameCapacity()
 //         "Sensor 2" = 2Ch
 
 // ID 2Ch - CAP - 20:03:B4:00:50:FE
-//                HH LL                     = Max seen Capacity x/10 Ah (=SOH ?)
-//                      AL AH               = Available Capacity x/10 Ah (=SOC)
-//                            AH            = Configured Capacity
+//                LL HH                     = Max seen Capacity x/10 Ah (=SOH ?)
+//                      LL HH               = Available Capacity x/10 Ah (=SOC)
+//                            CfgAh         = Configured Capacity
 //                               FF         = CalibByte, maybe filled with stuffing bits?
 //                               01         = CalibrationDone flag, 1=ok, 0=uncalibrated
 
@@ -287,36 +282,26 @@ void IBS_Sensor::readUnknownParam()
 // - configure initial battery status? (0x7F = 50% charge state)
 
 // Request for configuration by main panel
-//  00005.731  3c  02   06  b2  3a  ff 7f ff ff  8b
-//             PID Node LEN Cmd Typ  0  1  2  3  CHK
+//  00005.731  3c  02   06  b2   3a  ff 7f ff ff  8b
+//             PID Node PCI SID  CMD  0  1  2  3  CHK
 
-// Response of sensor
-//  00005.780  7d  02   02  f2 0a ff ff ff ff  fe
-//             PID Node LEN  1  2 ff ff ff ff  CHK
-//                          ^^ ^^ = Data, but what does it mean?
+// OK Response of sensor
+//  00005.780  7d  02   02  f2   0a  ff ff ff ff  fe
+//             PID Node LEN RSID  2  ff ff ff ff  CHK
+//                                   ^^ ^^ ^^ ^^ = Stuffing
+//                               ^^ = Data, but what does it mean?
 
-    LinBus->LinMessage[0] = 0x01 + _NodeId;  // Node = Sensor No
-    LinBus->LinMessage[1] = 0x06;              // CMD LEN =  6 bytes
-    LinBus->LinMessage[2] = SID_READ_BY_ID;    // Service Identifier = "Read by Identifier"
+    LinBus->LinMessage[0] = 0x01 + _NodeId;    // Node = Sensor No
+    LinBus->LinMessage[1] = 0x06;              // PCI = Single Frame, 6 Bytes
+    LinBus->LinMessage[2] = SID_READ_BY_ID;    // SID = Read by Identifier
     LinBus->LinMessage[3] = 0x3A;              // Config Type
-    LinBus->LinMessage[4] = 0xFF;              // Data 0 = the unknown message = reset configuration?
-    LinBus->LinMessage[5] = 0x7F;              // Data 1 = obviously not the first but the second byte will be written
+    // the unknown content of 4 Bytes = reset configuration?
+    LinBus->LinMessage[4] = 0xFF;              // Data 0
+    LinBus->LinMessage[5] = 0x7F;              // Data 1
     LinBus->LinMessage[6] = 0xFF;              // Data 2
     LinBus->LinMessage[7] = 0xFF;              // Data 3
 
-    LinBus->writeFrame(FRAME_ID_MASTER_REQUEST, 8);
-    bool chkSumValid = LinBus->readFrame(FRAME_ID_SLAVE_REQUEST);
-
-    if (chkSumValid)
-    {
-        Serial.print("Bytes received: ");
-        Serial.print(LinBus->LinMessage[0], HEX);
-        Serial.print(".");
-        Serial.print(LinBus->LinMessage[1], HEX);
-        Serial.println();
-    }
-
-    // return chkSumValid;
+    LinBus->writeDiagnosticMasterRequest();
 }
 
 /// Write configuration Parameter "Capacity" = Value of Ah of the Battery, default factory value = "80"Ah
@@ -326,21 +311,21 @@ void IBS_Sensor::writeBatCapacity(uint8_t BatCapacity)
 {
 // Configuration (Of Sensor Type 1)
 // Battery capacity can be read back on 0x2C Byte 4
-// ID 3Ch - Capacity       02  03  B5:39: BatCap :FF:FF:FF - BatCap in Ah
-//                         Sen Len Cmd
+// ID 3Ch - Capacity       02   03  B5  39  BatCap :FF:FF:FF - BatCap in Ah
+//                         Node PCI SID Cfg Value  STUFFING
 
 
     LinBus->LinMessage[0] = 0x01 + _NodeId;    // Sensor No
-    LinBus->LinMessage[1] = 0x03;              // CMD Len
-    LinBus->LinMessage[2] = SID_RESERVED;      // CMD Config Write
-    LinBus->LinMessage[3] = 0x39;              // Config Type
-    LinBus->LinMessage[4] = BatCapacity;       // e.g. 70 Ah
+    LinBus->LinMessage[1] = 0x03;              // PCI = Single Frame, 3 Bytes
+    LinBus->LinMessage[2] = SID_RESERVED;      // SID = Config Write
+    LinBus->LinMessage[3] = 0x39;              // Config Adress
+    LinBus->LinMessage[4] = BatCapacity;       // value e.g. 70 Ah
+
     LinBus->LinMessage[5] = 0xFF;              // stuffing bytes
     LinBus->LinMessage[6] = 0xFF;
     LinBus->LinMessage[7] = 0xFF;
 
-    LinBus->writeFrame(FRAME_ID_MASTER_REQUEST, 8);
-    LinBus->readFrame(FRAME_ID_SLAVE_REQUEST);
+    LinBus->writeDiagnosticMasterRequest();
 }
 
 /// Write configuration Parameter "Battery Type" and read answer back (not judged)
@@ -356,7 +341,9 @@ void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
                     ^^ = SID
                           ^^ = AGM              parameter to be written
 00012.988  7d 02 03 f5 3a 1e ff ff ff ac ERR    Answer Sensor 2 Len 3 Conf+40=F5 Type 3a Data 1e
+                             ^^ ^^ ^^ = Stuffing
                           ^^ = AGM readback --> confirmation of parameter from device
+                       ^^ = Config Adr
                     ^^ = SID+40 = RSID --> valid (command failed on 0x7F)
 00013.115  ec bc 02 dc 01 46 FE 31              CAP Sensor 2, is not calibrated (FE)
                                  ^ need to calibrate
@@ -367,9 +354,9 @@ void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
 //              AGM Bat    02:03:B5:3A: 1E :FF:FF:FF|EC
 
     LinBus->LinMessage[0] = 0x01 + _NodeId;  // Sensor No
-    LinBus->LinMessage[1] = 0x03;            // CMD Len
-    LinBus->LinMessage[2] = SID_RESERVED;    // CMD Config Read
-    LinBus->LinMessage[3] = 0x3A;            // Config Type
+    LinBus->LinMessage[1] = 0x03;            // PCI = Single Frame, 3 Bytes
+    LinBus->LinMessage[2] = SID_RESERVED;    // CMD Config Write
+    LinBus->LinMessage[3] = 0x3A;            // Config Adress
 
     switch (BatType)
     {
@@ -386,10 +373,10 @@ void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
         break;
     }
 
-    LinBus->LinMessage[5] = 0xFF;              // stuffing bytes
+    // stuffing bytes
+    LinBus->LinMessage[5] = 0xFF;
     LinBus->LinMessage[6] = 0xFF;
     LinBus->LinMessage[7] = 0xFF;
 
-    LinBus->writeFrame(FRAME_ID_MASTER_REQUEST, 8);
-    LinBus->readFrame(FRAME_ID_SLAVE_REQUEST);
+    LinBus->writeDiagnosticMasterRequest();
 }
