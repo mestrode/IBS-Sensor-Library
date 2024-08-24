@@ -253,7 +253,7 @@ void IBS_Sensor::writeConfiguration(IBS_BatteryTypes BatType, uint8_t BatCapacit
 
     // configure
     Serial.print(" (1/3) Read unknown Param...\n");
-    readUnknownParam();               // Not sure why
+    readBatType();
     Serial.print(" (2/3) Write capacity...\n");
     writeBatCapacity(BatCapacity);    // nominal capacity (Ah)
     Serial.print(" (3/3) Write battery type...\n");
@@ -272,7 +272,7 @@ void IBS_Sensor::writeConfiguration(IBS_BatteryTypes BatType, uint8_t BatCapacit
 /// Parameter will be read by the configuration procedure used by the main panel
 /// so I don't want to break tradition...
 /// @returns no verification of success!!!
-void IBS_Sensor::readUnknownParam()
+void IBS_Sensor::readBatType()
 {
 // Function of ths configuration Frame is unknown!
 // Frame is send in configuration procedure by control panel, so why miss this out?
@@ -302,12 +302,14 @@ void IBS_Sensor::readUnknownParam()
     LinBus->LinMessage[7] = 0xFF;              // D5 = Data 3 = Wildcard Function ID MSB
 
     LinBus->writeDiagnosticMasterRequest();
+
+    // TODO: phrase and investigate result
 }
 
 /// Write configuration Parameter "Capacity" = Value of Ah of the Battery, default factory value = "80"Ah
 /// @param BatCapacity labeled capacity (in Ah) of the lead battery
 /// @returns no verification of success!!!
-void IBS_Sensor::writeBatCapacity(uint8_t BatCapacity)
+bool IBS_Sensor::writeBatCapacity(uint8_t BatCapacity)
 {
 // Configuration (Of Sensor Type 1)
 // Battery capacity can be read back on 0x2C Byte 4
@@ -325,13 +327,13 @@ void IBS_Sensor::writeBatCapacity(uint8_t BatCapacity)
     LinBus->LinMessage[6] = 0xFF;
     LinBus->LinMessage[7] = 0xFF;
 
-    LinBus->writeDiagnosticMasterRequest();
+    return LinBus->writeDiagnosticMasterRequest();
 }
 
 /// Write configuration Parameter "Battery Type" and read answer back (not judged)
 /// @param BatType 
 /// @returns no verification of success!!!
-void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
+bool IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
 {
 // Battery Type can not be verified by using another Frame, since no Frame includes this data
 // But recalibration is obviously needed, so CalibrationDone Flag should be an indicator for success
@@ -378,5 +380,5 @@ void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
     LinBus->LinMessage[6] = 0xFF;
     LinBus->LinMessage[7] = 0xFF;
 
-    LinBus->writeDiagnosticMasterRequest();
+    return LinBus->writeDiagnosticMasterRequest();
 }
