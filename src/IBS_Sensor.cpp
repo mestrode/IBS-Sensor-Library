@@ -196,7 +196,7 @@ bool IBS_Sensor::readFrameSOx()
 //                   SoH            = State Of Health x/2 in Prozent
 //                      ??          = unknown4 / has correlation to Cap_Available or SOC?
 //                         ??       = unknown5 / no direkt link to unkown4?
-//                            H?:L? = unknown6 / maybe some corelation to Cap_Available or SOC?
+//                            L?:H? = unknown6 / maybe some corelation to Cap_Available or SOC?
 // Mayby SOF (State of Function) is included
 
     bool chkSumValid = LinBus->readFrame(IBS_FrameID[_NodeId][IBS_FRM_SOx]);
@@ -291,15 +291,15 @@ void IBS_Sensor::readUnknownParam()
 //                                   ^^ ^^ ^^ ^^ = Stuffing
 //                               ^^ = Data, but what does it mean?
 
-    LinBus->LinMessage[0] = 0x01 + _NodeId;    // Node = Sensor No
+    LinBus->LinMessage[0] = 0x01 + _NodeId;    // NAD = Node = Sensor No
     LinBus->LinMessage[1] = 0x06;              // PCI = Single Frame, 6 Bytes
     LinBus->LinMessage[2] = SID_READ_BY_ID;    // SID = Read by Identifier
-    LinBus->LinMessage[3] = 0x3A;              // Config Type
+    LinBus->LinMessage[3] = 0x3A;              // D1 = Config Type
     // the unknown content of 4 Bytes = reset configuration?
-    LinBus->LinMessage[4] = 0xFF;              // Data 0
-    LinBus->LinMessage[5] = 0x7F;              // Data 1
-    LinBus->LinMessage[6] = 0xFF;              // Data 2
-    LinBus->LinMessage[7] = 0xFF;              // Data 3
+    LinBus->LinMessage[4] = 0xFF;              // D2 = Data 0 = Wildcard Supplier ID LSB
+    LinBus->LinMessage[5] = 0x7F;              // D3 = Data 1 = Wildcard Supplier ID MSB
+    LinBus->LinMessage[6] = 0xFF;              // D4 = Data 2 = Wildcard Function ID LSB
+    LinBus->LinMessage[7] = 0xFF;              // D5 = Data 3 = Wildcard Function ID MSB
 
     LinBus->writeDiagnosticMasterRequest();
 }
@@ -355,7 +355,7 @@ void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
 
     LinBus->LinMessage[0] = 0x01 + _NodeId;  // Sensor No
     LinBus->LinMessage[1] = 0x03;            // PCI = Single Frame, 3 Bytes
-    LinBus->LinMessage[2] = SID_RESERVED;    // CMD Config Write
+    LinBus->LinMessage[2] = SID_RESERVED;    // SID = Config Write
     LinBus->LinMessage[3] = 0x3A;            // Config Adress
 
     switch (BatType)
@@ -374,7 +374,7 @@ void IBS_Sensor::writeBatType(IBS_BatteryTypes BatType)
     }
 
     // stuffing bytes
-    LinBus->LinMessage[5] = 0xFF;
+    LinBus->LinMessage[5] = 0xFF;     // stuffing bytes
     LinBus->LinMessage[6] = 0xFF;
     LinBus->LinMessage[7] = 0xFF;
 
